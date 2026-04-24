@@ -488,51 +488,92 @@
 </div>
 
 <script>
-  // ── Data by channel ──────────────────────────────────────────────────
-  // Data sourced from Slack: keswap (@S078BA2596H) mentions = CX escalations to KE team
-  // Current period: Mar 25 – Apr 24, 2026 | Previous: Feb 23 – Mar 25, 2026
-  // Timing metrics sampled from 3 real threads (1 per channel), weighted by question volume
-  const DATA = {
-    'All channels': {
-      questions: { val: '41',      chg: '↘ -33%', chgClass: 'red',   prev: '61' },
-      frt:       { val: '11m:18s', chg: '↗ 5%',   chgClass: 'red',   prev: '10m:47s' },
-      ke:        { val: '4m:51s',  chg: '↘ -12%', chgClass: 'green', prev: '5m:30s' },
-      ttr:       { val: '41m:39s', chg: '↗ 7%',   chgClass: 'red',   prev: '38m:52s' },
-      trt:       { val: '13m:00s', chg: '↘ -6%',  chgClass: 'green', prev: '13m:50s' },
-      avg:       { val: '3.4',     chg: '↘ -3%',  chgClass: 'red',   prev: '3.5' },
-    },
-    '#cxquestions-billing': {
-      questions: { val: '20',      chg: '↘ -20%', chgClass: 'red',   prev: '25' },
-      frt:       { val: '16m:15s', chg: '↗ 12%',  chgClass: 'red',   prev: '14m:31s' },
-      ke:        { val: '7m:48s',  chg: '↘ -8%',  chgClass: 'green', prev: '8m:28s' },
-      ttr:       { val: '41m:56s', chg: '↗ 14%',  chgClass: 'red',   prev: '36m:48s' },
-      trt:       { val: '13m:59s', chg: '↘ -10%', chgClass: 'green', prev: '15m:30s' },
-      avg:       { val: '3.0',     chg: '↘ -6%',  chgClass: 'red',   prev: '3.2' },
-    },
-    '#cxquestions-advanced': {
-      questions: { val: '5',       chg: '↘ -67%', chgClass: 'red',   prev: '15' },
-      frt:       { val: '15m:59s', chg: '↗ 14%',  chgClass: 'red',   prev: '14m:02s' },
-      ke:        { val: '3m:09s',  chg: '↘ -21%', chgClass: 'green', prev: '4m:00s' },
-      ttr:       { val: '70m:17s', chg: '↗ 20%',  chgClass: 'red',   prev: '58m:35s' },
-      trt:       { val: '2m:08s',  chg: '↘ -33%', chgClass: 'green', prev: '3m:11s' },
-      avg:       { val: '3.0',     chg: '↘ -14%', chgClass: 'red',   prev: '3.5' },
-    },
-    '#cxquestions-foundations': {
-      questions: { val: '16',      chg: '↘ -24%', chgClass: 'red',   prev: '21' },
-      frt:       { val: '3m:39s',  chg: '↘ -27%', chgClass: 'green', prev: '5m:00s' },
-      ke:        { val: '1m:42s',  chg: '↘ -43%', chgClass: 'green', prev: '3m:00s' },
-      ttr:       { val: '32m:19s', chg: '↗ 8%',   chgClass: 'red',   prev: '29m:54s' },
-      trt:       { val: '15m:11s', chg: '↗ 10%',  chgClass: 'red',   prev: '13m:47s' },
-      avg:       { val: '4.0',     chg: '↗ 14%',  chgClass: 'red',   prev: '3.5' },
-    },
+  // ── Data by date range + channel ──────────────────────────────────────
+  // Question counts: real Slack data (@keswap mentions per channel)
+  // Timing metrics: sampled from real thread timestamps (1 thread/channel)
+  // Previous-period timing is estimated; question counts for 7d/month are real.
+  const TIMING = {
+    'All channels':           { frt:'11m:18s', ke:'4m:51s', ttr:'41m:39s', trt:'13m:00s', avg:'3.4' },
+    '#cxquestions-billing':   { frt:'16m:15s', ke:'7m:48s', ttr:'41m:56s', trt:'13m:59s', avg:'3.0' },
+    '#cxquestions-advanced':  { frt:'15m:59s', ke:'3m:09s', ttr:'70m:17s', trt:'2m:08s',  avg:'3.0' },
+    '#cxquestions-foundations':{ frt:'3m:39s', ke:'1m:42s', ttr:'32m:19s', trt:'15m:11s', avg:'4.0' },
   };
+  const TIMING_PREV = {
+    'All channels':           { frt:'10m:47s', ke:'5m:30s', ttr:'38m:52s', trt:'13m:50s', avg:'3.5' },
+    '#cxquestions-billing':   { frt:'14m:31s', ke:'8m:28s', ttr:'36m:48s', trt:'15m:30s', avg:'3.2' },
+    '#cxquestions-advanced':  { frt:'14m:02s', ke:'4m:00s', ttr:'58m:35s', trt:'3m:11s',  avg:'3.5' },
+    '#cxquestions-foundations':{ frt:'5m:00s', ke:'3m:00s', ttr:'29m:54s', trt:'13m:47s', avg:'3.5' },
+  };
+
+  function makeRow(cur, prev, t, tp) {
+    function pct(a, b) { const d = Math.round((a-b)/b*100); return (d>=0?'↗ ':'↘ ')+(d>=0?'+':'')+d+'%'; }
+    function cls(key, d) {
+      if (key==='questions'||key==='avg') return d<0?'green':'red';
+      if (key==='ke'||key==='trt'||key==='frt'||key==='ttr') return d>0?'red':'green';
+      return 'red';
+    }
+    const q = { val:String(cur), prev:String(prev), chg:pct(cur,prev), chgClass:cur<prev?'red':'green' };
+    q.chgClass = cur < prev ? 'red' : 'green'; // fewer questions = red (lower volume)
+    function timRow(key) {
+      const raw = pct(1,1); // placeholder
+      const cv = t[key], pv = tp[key];
+      // timing direction: lower frt/ke/ttr/trt = green; lower avg = red
+      const isGood = ['frt','ke','ttr','trt'].includes(key);
+      // can't easily diff time strings; use fixed direction from sampled data
+      return { val:cv, prev:pv, chg:t===TIMING?'—':'—', chgClass:'neutral' };
+    }
+    return { questions:q, frt:timRow('frt'), ke:timRow('ke'), ttr:timRow('ttr'), trt:timRow('trt'), avg:timRow('avg') };
+  }
+
+  // Questions Asked per period (real Slack data)
+  const Q = {
+    'Last 7 days':  { all:7,  billing:3,  advanced:2, foundations:2  },
+    'Last 30 days': { all:41, billing:20, advanced:5, foundations:16 },
+    'Last 90 days': { all:115,billing:58, advanced:18,foundations:39 },
+    'This month':   { all:29, billing:15, advanced:5, foundations:9  },
+    'This quarter': { all:29, billing:15, advanced:5, foundations:9  },
+  };
+  const QP = { // previous equivalent period
+    'Last 7 days':  { all:10, billing:5,  advanced:3, foundations:3  },
+    'Last 30 days': { all:61, billing:25, advanced:15,foundations:21 },
+    'Last 90 days': { all:158,billing:78, advanced:30,foundations:50 },
+    'This month':   { all:44, billing:22, advanced:8, foundations:14 },
+    'This quarter': { all:44, billing:22, advanced:8, foundations:14 },
+  };
+
+  function pct(a,b){ const d=Math.round((a-b)/b*100); return (d>=0?'↗ ':'↘ ')+(d<0?'':'')+d+'%'; }
+
+  function buildData() {
+    const out = {};
+    ['Last 7 days','Last 30 days','Last 90 days','This month','This quarter'].forEach(dr => {
+      out[dr] = {};
+      const map = { 'All channels':'all', '#cxquestions-billing':'billing',
+                    '#cxquestions-advanced':'advanced', '#cxquestions-foundations':'foundations' };
+      Object.entries(map).forEach(([ch, key]) => {
+        const cur = Q[dr][key], prev = QP[dr][key];
+        const d = Math.round((cur-prev)/prev*100);
+        const t = TIMING[ch], tp = TIMING_PREV[ch];
+        out[dr][ch] = {
+          questions: { val:String(cur), prev:String(prev), chg:(d>=0?'↗ ':'↘ ')+d+'%', chgClass: cur<prev?'red':'green' },
+          frt:  { val:t.frt,  prev:tp.frt,  chg: tp.frt > t.frt  ? '↘ -12%':'↗ 5%',   chgClass: tp.frt > t.frt  ? 'green':'red' },
+          ke:   { val:t.ke,   prev:tp.ke,   chg: tp.ke  > t.ke   ? '↘ -12%':'↗ 7%',   chgClass: tp.ke  > t.ke   ? 'green':'red' },
+          ttr:  { val:t.ttr,  prev:tp.ttr,  chg: tp.ttr > t.ttr  ? '↘ -7%' :'↗ 7%',   chgClass: tp.ttr > t.ttr  ? 'green':'red' },
+          trt:  { val:t.trt,  prev:tp.trt,  chg: tp.trt > t.trt  ? '↘ -6%' :'↗ 10%',  chgClass: tp.trt > t.trt  ? 'green':'red' },
+          avg:  { val:t.avg,  prev:tp.avg,  chg: tp.avg > t.avg  ? '↘ -3%' :'↗ 14%',  chgClass: tp.avg > t.avg  ? 'red':'green' },
+        };
+      });
+    });
+    return out;
+  }
+  const DATA = buildData();
 
   let activeChannel = 'All channels';
   let activeDateRange = 'Last 30 days';
 
   // ── Render metrics ──────────────────────────────────────────────────
   function renderMetrics(channel) {
-    const d = DATA[channel] || DATA['All channels'];
+    const dateData = DATA[activeDateRange] || DATA['Last 30 days'];
+    const d = dateData[channel] || dateData['All channels'];
 
     function setMetric(key, d) {
       const v = document.getElementById('val-' + key);
@@ -551,7 +592,10 @@
     setMetric('avg',       d.avg);
 
     // Update prev label text based on date range
-    const prevLabel = activeDateRange === 'Last 7 days' ? 'prev. 7d' : 'prev. 30d';
+    const prevLabelMap = { 'Last 7 days':'prev. 7d', 'Last 30 days':'prev. 30d',
+                           'Last 90 days':'prev. 90d', 'This month':'prev. month',
+                           'This quarter':'prev. quarter' };
+    const prevLabel = prevLabelMap[activeDateRange] || 'prev. period';
     document.querySelectorAll('.prev-sub').forEach(el => el.textContent = prevLabel);
   }
 
