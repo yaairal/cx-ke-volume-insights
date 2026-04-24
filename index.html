@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Volume Insights</title>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fff;
+      color: #323338;
+      min-height: 100vh;
+    }
+
+    .dashboard {
+      padding: 28px 36px;
+      max-width: 1500px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #323338;
+      letter-spacing: -0.3px;
+    }
+
+    .header-btn {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #d0d4e4;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #676879;
+      font-size: 16px;
+      transition: background 0.15s;
+    }
+    .header-btn:hover { background: #f5f6f8; }
+
+    /* ── Filters ── */
+    .filters-wrap {
+      margin-bottom: 0;
+    }
+
+    .filters-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 0;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 14px;
+      scrollbar-width: none;
+    }
+    .filters-row::-webkit-scrollbar { display: none; }
+
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      padding-right: 20px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .filter-label {
+      font-size: 11.5px;
+      color: #676879;
+      font-weight: 400;
+      margin-bottom: 2px;
+      white-space: nowrap;
+    }
+
+    .filter-value {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #323338;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .caret {
+      font-size: 9px;
+      color: #676879;
+      margin-left: 1px;
+    }
+
+    .show-all-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #323338;
+      border: none;
+      background: none;
+      cursor: pointer;
+      white-space: nowrap;
+      padding: 0 4px;
+      font-family: inherit;
+      flex-shrink: 0;
+    }
+
+    /* Dropdown */
+    .dropdown {
+      position: fixed;
+      background: #fff;
+      border: 1px solid #d0d4e4;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      z-index: 1000;
+      min-width: 200px;
+      padding: 6px 0;
+      display: none;
+    }
+    .dropdown.open { display: block; }
+
+    .dropdown-item {
+      padding: 8px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #323338;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.1s;
+    }
+    .dropdown-item:hover { background: #f5f6f8; }
+    .dropdown-item.selected { font-weight: 700; color: #0073ea; }
+    .dropdown-item .check { color: #0073ea; font-size: 12px; }
+
+    .filter-divider {
+      height: 1px;
+      background: #e6e9ef;
+      margin-bottom: 0;
+    }
+
+    /* ── Last updated ── */
+    .meta-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 8px 0 0;
+      gap: 8px;
+    }
+
+    .last-updated {
+      font-size: 11px;
+      color: #adb1c2;
+    }
+
+    .refresh-btn {
+      font-size: 11px;
+      color: #0073ea;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      padding: 0;
+    }
+    .refresh-btn:hover { text-decoration: underline; }
+
+    /* ── Metrics ── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      margin-top: 32px;
+    }
+
+    .metric-card {
+      padding: 0 20px;
+      text-align: center;
+      border-right: 1px solid #e6e9ef;
+    }
+    .metric-card:first-child { padding-left: 4px; }
+    .metric-card:last-child { border-right: none; padding-right: 4px; }
+
+    .metric-label {
+      font-size: 14px;
+      color: #676879;
+      font-weight: 500;
+      min-height: 44px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      text-align: center;
+      line-height: 1.35;
+      margin-bottom: 10px;
+    }
+
+    .metric-value {
+      font-size: 54px;
+      font-weight: 900;
+      color: #323338;
+      line-height: 1;
+      letter-spacing: -2px;
+      margin-bottom: 14px;
+    }
+
+    .metric-value.lg { font-size: 44px; letter-spacing: -1.5px; }
+    .metric-value.md { font-size: 36px; letter-spacing: -1px; }
+
+    .metric-comparison {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .change-group, .prev-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+    }
+
+    .change-value {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .change-value.red  { color: #e2445c; }
+    .change-value.green { color: #00c875; }
+
+    .change-sub, .prev-sub {
+      font-size: 11px;
+      color: #adb1c2;
+      font-weight: 400;
+    }
+
+    .comp-divider {
+      width: 1px;
+      height: 28px;
+      background: #e6e9ef;
+      flex-shrink: 0;
+    }
+
+    .prev-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #676879;
+    }
+
+    /* Loading state */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      display: none;
+    }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #e6e9ef;
+      border-top-color: #0073ea;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Channel tag */
+    .channel-tag {
+      display: inline-block;
+      background: #cce5ff;
+      color: #0073ea;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 6px;
+      margin-top: 4px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+      .metrics-grid { grid-template-columns: repeat(3, 1fr); }
+      .metric-card { border-right: 1px solid #e6e9ef; border-bottom: 1px solid #e6e9ef; padding: 20px; }
+      .metric-card:nth-child(3n) { border-right: none; }
+      .metric-card:nth-last-child(-n+3) { border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+
+  <!-- Header -->
+  <div class="header">
+    <h1 class="title">Volume insights</h1>
+    <button class="header-btn" title="Expand">⤢</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-wrap">
+    <div class="filters-row">
+
+      <div class="filter-item" id="filter-date">
+        <span class="filter-label">Date range</span>
+        <span class="filter-value" id="date-display">Last 30 days <span class="caret">▾</span></span>
+        <div class="dropdown" id="dropdown-date">
+          <div class="dropdown-item selected" data-value="Last 30 days"><span class="check">✓</span> Last 30 days</div>
+          <div class="dropdown-item" data-value="Last 7 days">Last 7 days</div>
+          <div class="dropdown-item" data-value="Last 90 days">Last 90 days</div>
+          <div class="dropdown-item" data-value="This month">This month</div>
+          <div class="dropdown-item" data-value="This quarter">This quarter</div>
+        </div>
+      </div>
+
+      <div class="filter-item" id="filter-channel">
+        <span class="filter-label">Channel Name</span>
+        <span class="filter-value" id="channel-display">All channels <span class="caret">▾</span></span>
+        <div class="dropdown" id="dropdown-channel">
+          <div class="dropdown-item selected" data-value="All channels"><span class="check">✓</span> All channels</div>
+          <div class="dropdown-item" data-value="#cxquestions-billing"># cxquestions-billing</div>
+          <div class="dropdown-item" data-value="#cxquestions-advanced"># cxquestions-advanced</div>
+          <div class="dropdown-item" data-value="#cxquestions-foundations"># cxquestions-foundations</div>
+        </div>
+      </div>
+
+      <div class="filter-item" id="filter-assignee">
+        <span class="filter-label">Assignee Name</span>
+        <span class="filter-value">All <span class="caret">▾</span></span>
+      </div>
+
+      <div class="filter-item" id="filter-manager">
+        <span class="filter-label">Manager</span>
+        <span class="filter-value">All <span class="caret">▾</span></span>
+      </div>
+
+      <div class="filter-item" id="filter-username">
+        <span class="filter-label">User Name</span>
+        <span class="filter-value">All <span class="caret">▾</span></span>
+      </div>
+
+      <div class="filter-item" id="filter-source">
+        <span class="filter-label">Ticket source</span>
+        <span class="filter-value">All <span class="caret">▾</span></span>
+      </div>
+
+      <div class="filter-item" id="filter-weekend">
+        <span class="filter-label">Weekend flag</span>
+        <span class="filter-value">All <span class="caret">▾</span></span>
+      </div>
+
+      <div class="filter-item" id="filter-day">
+        <span class="filter-label">Day of week</span>
+        <span class="filter-value">All <span class="caret">▾</span></span>
+      </div>
+
+      <div class="filter-item" id="filter-tz">
+        <span class="filter-label">Time zone</span>
+        <span class="filter-value">All <span class="caret">▾</span></span>
+      </div>
+
+      <button class="show-all-btn">Show all ▾</button>
+    </div>
+    <div class="filter-divider"></div>
+    <div class="meta-row">
+      <span class="last-updated" id="last-updated-text">Last updated: —</span>
+      <button class="refresh-btn" onclick="refreshData()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="metrics-grid">
+
+    <div class="metric-card">
+      <div class="metric-label">Questions Asked</div>
+      <div class="metric-value" id="val-questions">1,890</div>
+      <div class="metric-comparison">
+        <div class="change-group">
+          <div class="change-value red" id="chg-questions">↘ -6%</div>
+          <div class="change-sub">change</div>
+        </div>
+        <div class="comp-divider"></div>
+        <div class="prev-group">
+          <div class="prev-value" id="prev-questions">2,002</div>
+          <div class="prev-sub">prev. 30d</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">First Response Time<br>(chat+email)</div>
+      <div class="metric-value" id="val-frt">5m:58s</div>
+      <div class="metric-comparison">
+        <div class="change-group">
+          <div class="change-value red" id="chg-frt">↗ 53%</div>
+          <div class="change-sub">change</div>
+        </div>
+        <div class="comp-divider"></div>
+        <div class="prev-group">
+          <div class="prev-value" id="prev-frt">3m:54s</div>
+          <div class="prev-sub">prev. 30d</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">KE Time to Resolution</div>
+      <div class="metric-value" id="val-ke">6m:10s</div>
+      <div class="metric-comparison">
+        <div class="change-group">
+          <div class="change-value green" id="chg-ke">↘ -15%</div>
+          <div class="change-sub">change</div>
+        </div>
+        <div class="comp-divider"></div>
+        <div class="prev-group">
+          <div class="prev-value" id="prev-ke">7m:18s</div>
+          <div class="prev-sub">prev. 30d</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Total Time to Resolution</div>
+      <div class="metric-value lg" id="val-ttr">22m:04s</div>
+      <div class="metric-comparison">
+        <div class="change-group">
+          <div class="change-value red" id="chg-ttr">↗ 2%</div>
+          <div class="change-sub">change</div>
+        </div>
+        <div class="comp-divider"></div>
+        <div class="prev-group">
+          <div class="prev-value" id="prev-ttr">21m:39s</div>
+          <div class="prev-sub">prev. 30d</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Team Response Time</div>
+      <div class="metric-value" id="val-trt">2m:49s</div>
+      <div class="metric-comparison">
+        <div class="change-group">
+          <div class="change-value green" id="chg-trt">↘ -7%</div>
+          <div class="change-sub">change</div>
+        </div>
+        <div class="comp-divider"></div>
+        <div class="prev-group">
+          <div class="prev-value" id="prev-trt">3m:02s</div>
+          <div class="prev-sub">prev. 30d</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Average Team<br>messages / requests</div>
+      <div class="metric-value" id="val-avg">3.0</div>
+      <div class="metric-comparison">
+        <div class="change-group">
+          <div class="change-value red" id="chg-avg">↘ -6%</div>
+          <div class="change-sub">change</div>
+        </div>
+        <div class="comp-divider"></div>
+        <div class="prev-group">
+          <div class="prev-value" id="prev-avg">3.2</div>
+          <div class="prev-sub">prev. 30d</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+</div>
+
+<script>
+  // ── Data by channel ──────────────────────────────────────────────────
+  const DATA = {
+    'All channels': {
+      questions:   { val: '1,890', chg: '↘ -6%',  chgClass: 'red',   prev: '2,002' },
+      frt:         { val: '5m:58s', chg: '↗ 53%',  chgClass: 'red',   prev: '3m:54s' },
+      ke:          { val: '6m:10s', chg: '↘ -15%', chgClass: 'green', prev: '7m:18s' },
+      ttr:         { val: '22m:04s',chg: '↗ 2%',   chgClass: 'red',   prev: '21m:39s' },
+      trt:         { val: '2m:49s', chg: '↘ -7%',  chgClass: 'green', prev: '3m:02s' },
+      avg:         { val: '3.0',    chg: '↘ -6%',  chgClass: 'red',   prev: '3.2' },
+    },
+    '#cxquestions-billing': {
+      questions:   { val: '621',    chg: '↘ -9%',  chgClass: 'red',   prev: '683' },
+      frt:         { val: '4m:42s', chg: '↗ 38%',  chgClass: 'red',   prev: '3m:24s' },
+      ke:          { val: '5m:33s', chg: '↘ -18%', chgClass: 'green', prev: '6m:46s' },
+      ttr:         { val: '19m:21s',chg: '↗ 4%',   chgClass: 'red',   prev: '18m:34s' },
+      trt:         { val: '2m:15s', chg: '↘ -11%', chgClass: 'green', prev: '2m:32s' },
+      avg:         { val: '2.8',    chg: '↘ -7%',  chgClass: 'red',   prev: '3.0' },
+    },
+    '#cxquestions-advanced': {
+      questions:   { val: '745',    chg: '↘ -4%',  chgClass: 'red',   prev: '776' },
+      frt:         { val: '6m:44s', chg: '↗ 61%',  chgClass: 'red',   prev: '4m:11s' },
+      ke:          { val: '7m:02s', chg: '↘ -11%', chgClass: 'green', prev: '7m:54s' },
+      ttr:         { val: '24m:18s',chg: '↗ 1%',   chgClass: 'red',   prev: '24m:03s' },
+      trt:         { val: '3m:04s', chg: '↘ -5%',  chgClass: 'green', prev: '3m:14s' },
+      avg:         { val: '3.1',    chg: '↘ -3%',  chgClass: 'red',   prev: '3.2' },
+    },
+    '#cxquestions-foundations': {
+      questions:   { val: '524',    chg: '↘ -5%',  chgClass: 'red',   prev: '551' },
+      frt:         { val: '5m:22s', chg: '↗ 43%',  chgClass: 'red',   prev: '3m:45s' },
+      ke:          { val: '5m:58s', chg: '↘ -17%', chgClass: 'green', prev: '7m:11s' },
+      ttr:         { val: '21m:44s',chg: '↗ 2%',   chgClass: 'red',   prev: '21m:18s' },
+      trt:         { val: '2m:37s', chg: '↘ -8%',  chgClass: 'green', prev: '2m:51s' },
+      avg:         { val: '3.2',    chg: '↘ -6%',  chgClass: 'red',   prev: '3.4' },
+    },
+  };
+
+  let activeChannel = 'All channels';
+  let activeDateRange = 'Last 30 days';
+
+  // ── Render metrics ──────────────────────────────────────────────────
+  function renderMetrics(channel) {
+    const d = DATA[channel] || DATA['All channels'];
+
+    function setMetric(key, d) {
+      const v = document.getElementById('val-' + key);
+      const c = document.getElementById('chg-' + key);
+      const p = document.getElementById('prev-' + key);
+      if (v) v.textContent = d.val;
+      if (c) { c.textContent = d.chg; c.className = 'change-value ' + d.chgClass; }
+      if (p) p.textContent = d.prev;
+    }
+
+    setMetric('questions', d.questions);
+    setMetric('frt',       d.frt);
+    setMetric('ke',        d.ke);
+    setMetric('ttr',       d.ttr);
+    setMetric('trt',       d.trt);
+    setMetric('avg',       d.avg);
+
+    // Update prev label text based on date range
+    const prevLabel = activeDateRange === 'Last 7 days' ? 'prev. 7d' : 'prev. 30d';
+    document.querySelectorAll('.prev-sub').forEach(el => el.textContent = prevLabel);
+  }
+
+  // ── Dropdowns ───────────────────────────────────────────────────────
+  function setupDropdown(filterId, dropdownId, displayId, onSelect) {
+    const filter = document.getElementById(filterId);
+    const dropdown = document.getElementById(dropdownId);
+    if (!filter || !dropdown) return;
+
+    filter.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.dropdown').forEach(d => { if (d !== dropdown) d.classList.remove('open'); });
+      if (!dropdown.classList.contains('open')) {
+        const rect = filter.getBoundingClientRect();
+        dropdown.style.top  = (rect.bottom + 4) + 'px';
+        dropdown.style.left = rect.left + 'px';
+      }
+      dropdown.classList.toggle('open');
+    });
+
+    dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.querySelectorAll('.dropdown-item').forEach(i => {
+          i.classList.remove('selected');
+          i.innerHTML = i.dataset.value.startsWith('#') ? '# ' + i.dataset.value.slice(1) : i.dataset.value;
+        });
+        item.classList.add('selected');
+        item.innerHTML = '<span class="check">✓</span> ' + item.textContent.trim();
+        const val = item.dataset.value;
+        if (displayId) {
+          document.getElementById(displayId).innerHTML = (val.length > 18 ? val.slice(0, 18) + '…' : val) + ' <span class="caret">▾</span>';
+        }
+        dropdown.classList.remove('open');
+        if (onSelect) onSelect(val);
+      });
+    });
+  }
+
+  // Channel filter
+  setupDropdown('filter-channel', 'dropdown-channel', 'channel-display', (val) => {
+    activeChannel = val;
+    renderMetrics(activeChannel);
+  });
+
+  // Date range filter
+  setupDropdown('filter-date', 'dropdown-date', 'date-display', (val) => {
+    activeDateRange = val;
+    renderMetrics(activeChannel);
+  });
+
+  // Close dropdowns on outside click
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
+  });
+
+  // ── Refresh ─────────────────────────────────────────────────────────
+  function refreshData() {
+    const loading = document.getElementById('loading');
+    loading.style.display = 'flex';
+    setTimeout(() => {
+      loading.style.display = 'none';
+      updateTimestamp();
+    }, 1200);
+  }
+
+  function updateTimestamp() {
+    const now = new Date();
+    const fmt = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+                ' ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('last-updated-text').textContent = 'Last updated: ' + fmt;
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────
+  renderMetrics('All channels');
+  updateTimestamp();
+</script>
+</body>
+</html>
