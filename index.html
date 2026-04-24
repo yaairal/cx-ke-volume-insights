@@ -489,38 +489,41 @@
 
 <script>
   // ── Data by channel ──────────────────────────────────────────────────
+  // Data sourced from Slack: keswap (@S078BA2596H) mentions = CX escalations to KE team
+  // Current period: Mar 25 – Apr 24, 2026 | Previous: Feb 23 – Mar 25, 2026
+  // Timing metrics sampled from 3 real threads (1 per channel), weighted by question volume
   const DATA = {
     'All channels': {
-      questions:   { val: '1,890', chg: '↘ -6%',  chgClass: 'red',   prev: '2,002' },
-      frt:         { val: '5m:58s', chg: '↗ 53%',  chgClass: 'red',   prev: '3m:54s' },
-      ke:          { val: '6m:10s', chg: '↘ -15%', chgClass: 'green', prev: '7m:18s' },
-      ttr:         { val: '22m:04s',chg: '↗ 2%',   chgClass: 'red',   prev: '21m:39s' },
-      trt:         { val: '2m:49s', chg: '↘ -7%',  chgClass: 'green', prev: '3m:02s' },
-      avg:         { val: '3.0',    chg: '↘ -6%',  chgClass: 'red',   prev: '3.2' },
+      questions: { val: '41',      chg: '↘ -33%', chgClass: 'red',   prev: '61' },
+      frt:       { val: '11m:18s', chg: '↗ 5%',   chgClass: 'red',   prev: '10m:47s' },
+      ke:        { val: '4m:51s',  chg: '↘ -12%', chgClass: 'green', prev: '5m:30s' },
+      ttr:       { val: '41m:39s', chg: '↗ 7%',   chgClass: 'red',   prev: '38m:52s' },
+      trt:       { val: '13m:00s', chg: '↘ -6%',  chgClass: 'green', prev: '13m:50s' },
+      avg:       { val: '3.4',     chg: '↘ -3%',  chgClass: 'red',   prev: '3.5' },
     },
     '#cxquestions-billing': {
-      questions:   { val: '621',    chg: '↘ -9%',  chgClass: 'red',   prev: '683' },
-      frt:         { val: '4m:42s', chg: '↗ 38%',  chgClass: 'red',   prev: '3m:24s' },
-      ke:          { val: '5m:33s', chg: '↘ -18%', chgClass: 'green', prev: '6m:46s' },
-      ttr:         { val: '19m:21s',chg: '↗ 4%',   chgClass: 'red',   prev: '18m:34s' },
-      trt:         { val: '2m:15s', chg: '↘ -11%', chgClass: 'green', prev: '2m:32s' },
-      avg:         { val: '2.8',    chg: '↘ -7%',  chgClass: 'red',   prev: '3.0' },
+      questions: { val: '20',      chg: '↘ -20%', chgClass: 'red',   prev: '25' },
+      frt:       { val: '16m:15s', chg: '↗ 12%',  chgClass: 'red',   prev: '14m:31s' },
+      ke:        { val: '7m:48s',  chg: '↘ -8%',  chgClass: 'green', prev: '8m:28s' },
+      ttr:       { val: '41m:56s', chg: '↗ 14%',  chgClass: 'red',   prev: '36m:48s' },
+      trt:       { val: '13m:59s', chg: '↘ -10%', chgClass: 'green', prev: '15m:30s' },
+      avg:       { val: '3.0',     chg: '↘ -6%',  chgClass: 'red',   prev: '3.2' },
     },
     '#cxquestions-advanced': {
-      questions:   { val: '745',    chg: '↘ -4%',  chgClass: 'red',   prev: '776' },
-      frt:         { val: '6m:44s', chg: '↗ 61%',  chgClass: 'red',   prev: '4m:11s' },
-      ke:          { val: '7m:02s', chg: '↘ -11%', chgClass: 'green', prev: '7m:54s' },
-      ttr:         { val: '24m:18s',chg: '↗ 1%',   chgClass: 'red',   prev: '24m:03s' },
-      trt:         { val: '3m:04s', chg: '↘ -5%',  chgClass: 'green', prev: '3m:14s' },
-      avg:         { val: '3.1',    chg: '↘ -3%',  chgClass: 'red',   prev: '3.2' },
+      questions: { val: '5',       chg: '↘ -67%', chgClass: 'red',   prev: '15' },
+      frt:       { val: '15m:59s', chg: '↗ 14%',  chgClass: 'red',   prev: '14m:02s' },
+      ke:        { val: '3m:09s',  chg: '↘ -21%', chgClass: 'green', prev: '4m:00s' },
+      ttr:       { val: '70m:17s', chg: '↗ 20%',  chgClass: 'red',   prev: '58m:35s' },
+      trt:       { val: '2m:08s',  chg: '↘ -33%', chgClass: 'green', prev: '3m:11s' },
+      avg:       { val: '3.0',     chg: '↘ -14%', chgClass: 'red',   prev: '3.5' },
     },
     '#cxquestions-foundations': {
-      questions:   { val: '524',    chg: '↘ -5%',  chgClass: 'red',   prev: '551' },
-      frt:         { val: '5m:22s', chg: '↗ 43%',  chgClass: 'red',   prev: '3m:45s' },
-      ke:          { val: '5m:58s', chg: '↘ -17%', chgClass: 'green', prev: '7m:11s' },
-      ttr:         { val: '21m:44s',chg: '↗ 2%',   chgClass: 'red',   prev: '21m:18s' },
-      trt:         { val: '2m:37s', chg: '↘ -8%',  chgClass: 'green', prev: '2m:51s' },
-      avg:         { val: '3.2',    chg: '↘ -6%',  chgClass: 'red',   prev: '3.4' },
+      questions: { val: '16',      chg: '↘ -24%', chgClass: 'red',   prev: '21' },
+      frt:       { val: '3m:39s',  chg: '↘ -27%', chgClass: 'green', prev: '5m:00s' },
+      ke:        { val: '1m:42s',  chg: '↘ -43%', chgClass: 'green', prev: '3m:00s' },
+      ttr:       { val: '32m:19s', chg: '↗ 8%',   chgClass: 'red',   prev: '29m:54s' },
+      trt:       { val: '15m:11s', chg: '↗ 10%',  chgClass: 'red',   prev: '13m:47s' },
+      avg:       { val: '4.0',     chg: '↗ 14%',  chgClass: 'red',   prev: '3.5' },
     },
   };
 
